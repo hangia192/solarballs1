@@ -1,1 +1,53 @@
+name: Build SolarBalls APK
 
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Unpack game
+        run: |
+          mkdir -p temp_unpacked
+          find . -maxdepth 1 -name "*.zip" -exec unzip -o -q "{}" -d temp_unpacked \;
+          GAME_DIR=$(find temp_unpacked -name "*.py" -exec dirname {} \; | head -n 1)
+          cp -r "$GAME_DIR"/* .
+          [ -f solarballs.py ] && [ ! -f main.py ] && cp solarballs.py main.py || true
+          cat << 'EOF' > buildozer.spec
+          [app]
+          title = SolarBalls
+          package.name = solarballs
+          package.domain = org.solarballs
+          source.dir = .
+          source.include_exts = py,png,jpg,wav,ogg,json
+          version = 1.0.0
+          requirements = python3,pygame
+          orientation = portrait
+          fullscreen = 1
+          android.archs = arm64-v8a
+          android.allow_backup = True
+          android.api = 33
+          android.minapi = 21
+          android.ndk = 25b
+
+          [buildozer]
+          log_level = 2
+          warn_on_root = 1
+          EOF
+
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          workdir: .
+          buildozer_version: master
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SolarBalls-Game-APK
+          path: bin/*.apk
