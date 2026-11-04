@@ -12,16 +12,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
           pip3 install --user --upgrade Cython==0.29.36 buildozer
-
-      - name: Pre-accept Android licenses
-        run: |
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          cp -r /usr/local/lib/android/sdk/licenses ~/.buildozer/android/platform/android-sdk/ || true
 
       - name: Unpack game and configure
         run: |
@@ -46,6 +41,8 @@ jobs:
           android.api = 33
           android.minapi = 21
           android.ndk = 25b
+          android.sdk_path = /usr/local/lib/android/sdk
+          android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
           android.accept_sdk_license = True
 
           [buildozer]
@@ -55,7 +52,7 @@ jobs:
 
       - name: Build APK with Buildozer
         run: |
-          yes | ~/.local/bin/buildozer -v android debug
+          ~/.local/bin/buildozer android debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
