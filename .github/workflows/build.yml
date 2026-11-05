@@ -26,22 +26,22 @@ jobs:
 
       - name: Prepare Game Files and Spec
         run: |
-          # Очищаем временную папку и распаковываем строго нужный архив
+          # Чистим временную папку и распаковываем свежий архив
           rm -rf temp_unpacked
           mkdir -p temp_unpacked
           unzip -o -q "solarballs (2) (1).zip" -d temp_unpacked
           
-          # Находим директорию с кодом игры и копируем всё в корень
+          # Находим директорию с игрой и переносим файлы в корень
           PY_FILE=$(find temp_unpacked -type f \( -name "main.py" -o -name "solarballs.py" \) | head -n 1)
           if [ -n "$PY_FILE" ]; then
             GAME_DIR="$(dirname "$PY_FILE")"
             cp -r "$GAME_DIR"/* .
           fi
           
-          # Если файл всё ещё solarballs.py, переименовываем в main.py
+          # Гарантируем правильное имя точки входа
           [ -f solarballs.py ] && [ ! -f main.py ] && mv solarballs.py main.py || true
 
-          # Генерируем buildozer.spec с поддержкой mp3, wav и картинок
+          # Генерируем конфигурацию с жестким альбомным режимом и поддержкой всех ассетов
           cat << 'EOF' > buildozer.spec
           [app]
           title = Solar Balls
@@ -52,7 +52,7 @@ jobs:
           source.include_patterns = sounds/*
           version = 1.0.0
           requirements = python3==3.10.12,hostpython3==3.10.12,pygame
-          orientation = portrait
+          orientation = landscape
           fullscreen = 1
           android.archs = arm64-v8a
           android.allow_backup = True
