@@ -1,46 +1,23 @@
-name: Build SolarBalls APK
-
-on:
-  workflow_dispatch:
-  push:
+name: Build
+on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  build-android:
+    name: Build for Android
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Restore Buildozer Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.buildozer
-            ~/.gradle
-          key: buildozer-cache-${{ runner.os }}-v2
-          restore-keys: |
-            buildozer-cache-${{ runner.os }}-
-
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-          pip3 install --user --upgrade Cython==0.29.36 "buildozer>=1.5.0"
-
-      - name: Unpack game and configure
+      - name: Prepare Game Files
         run: |
           mkdir -p temp_unpacked
           find . -maxdepth 1 -name "*.zip" -exec unzip -o -q "{}" -d temp_unpacked \;
           GAME_DIR=$(find temp_unpacked -name "*.py" -exec dirname {} \; | head -n 1)
           cp -r "$GAME_DIR"/* .
           [ -f solarballs.py ] && [ ! -f main.py ] && cp solarballs.py main.py || true
+
           cat << 'EOF' > buildozer.spec
           [app]
           title = SolarBalls
@@ -64,14 +41,15 @@ jobs:
           warn_on_root = 1
           EOF
 
-      - name: Build APK with Buildozer
-        run: |
-          export JAVA_HOME=$JAVA_HOME_17_X64
-          export PATH=$JAVA_HOME/bin:$PATH:$HOME/.local/bin
-          buildozer -v android debug
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          workdir: .
+          buildozer_version: stable
 
-      - name: Upload APK Artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SolarBalls-Game-APK
-          path: bin/*.apk
+          name: package
+          path: ${{ steps.buildozer.outputs.filename }}
