@@ -22,7 +22,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-          pip3 install --user --upgrade Cython==0.29.36 "buildozer>=1.5.0"
+          pip3 install --user --upgrade "Cython<3.0" "buildozer>=1.5.0"
 
       - name: Prepare Game Files
         run: |
@@ -31,7 +31,6 @@ jobs:
           GAME_DIR=$(find temp_unpacked -name "*.py" -exec dirname {} \; | head -n 1)
           cp -r "$GAME_DIR"/* .
           [ -f solarballs.py ] && [ ! -f main.py ] && cp solarballs.py main.py || true
-          
           cat << 'EOF' > buildozer.spec
           [app]
           title = Solar Balls
@@ -40,7 +39,7 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,wav,ogg,json
           version = 1.0.0
-          requirements = python3,pygame
+          requirements = python3==3.10.12,hostpython3==3.10.12,pygame
           orientation = portrait
           fullscreen = 1
           android.archs = arm64-v8a
@@ -56,9 +55,8 @@ jobs:
           EOF
 
       - name: Build APK with Buildozer
-        env:
-          JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
         run: |
+          export JAVA_HOME=$JAVA_HOME_17_X64
           export PATH=$JAVA_HOME/bin:$PATH:$HOME/.local/bin
           buildozer -v android debug
 
