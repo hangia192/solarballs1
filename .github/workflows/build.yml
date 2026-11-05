@@ -6,17 +6,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-          pip3 install --user --upgrade Cython==0.29.36 buildozer
+      - name: Setup Buildozer Environment
+        uses: kivy/buildozer-action@v1
 
       - name: Unpack game and configure
         run: |
@@ -40,9 +37,6 @@ jobs:
           android.allow_backup = True
           android.api = 33
           android.minapi = 21
-          android.ndk = 25b
-          android.sdk_path = /usr/local/lib/android/sdk
-          android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
           android.accept_sdk_license = True
 
           [buildozer]
@@ -52,7 +46,7 @@ jobs:
 
       - name: Build APK with Buildozer
         run: |
-          ~/.local/bin/buildozer android debug
+          buildozer android debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
