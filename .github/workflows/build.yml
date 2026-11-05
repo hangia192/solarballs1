@@ -15,8 +15,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-          pip3 install --user --upgrade "buildozer>=1.5.0" "Cython<3.0"
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+          pip3 install --user --upgrade Cython==0.29.36 "buildozer>=1.5.0"
 
       - name: Unpack game and configure
         run: |
@@ -33,7 +33,7 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,wav,ogg,json
           version = 1.0.0
-          requirements = python3,pygame
+          requirements = python3,pygame-ce
           orientation = portrait
           fullscreen = 1
           android.archs = arm64-v8a
